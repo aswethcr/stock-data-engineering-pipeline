@@ -12,7 +12,7 @@ st_autorefresh(interval=5000)
 
 st.title("📊 Real-Time Stock Data Engineering Dashboard")
 
-# -------- DATABASE CONNECTION -------- #
+# ---------------- DATABASE CONNECTION ---------------- #
 
 try:
     conn = psycopg2.connect(
@@ -31,18 +31,21 @@ except Exception:
 
     st.warning("Database not available. Running in demo mode.")
 
-    # Demo stock data for Streamlit Cloud
+    # Download demo stock data
     demo = yf.download("AAPL", period="1d", interval="1m")
     demo.reset_index(inplace=True)
 
+    # Detect correct timestamp column
+    time_col = "Datetime" if "Datetime" in demo.columns else "Date"
+
     df = pd.DataFrame({
-        "timestamp": demo["Datetime"],
+        "timestamp": demo[time_col],
         "price": demo["Close"],
         "volume": demo["Volume"],
-        "symbol": "AAPL"
+        "symbol": ["AAPL"] * len(demo)
     })
 
-# -------- PIPELINE METRICS -------- #
+# ---------------- PIPELINE METRICS ---------------- #
 
 st.subheader("Pipeline Metrics")
 
@@ -53,7 +56,7 @@ col2.metric("Max Price", round(df["price"].max(), 2))
 col3.metric("Min Price", round(df["price"].min(), 2))
 col4.metric("Average Price", round(df["price"].mean(), 2))
 
-# -------- RECORDS PER STOCK -------- #
+# ---------------- RECORDS PER STOCK ---------------- #
 
 st.subheader("Records Per Stock")
 
@@ -67,7 +70,7 @@ if df.empty:
 
 st.divider()
 
-# -------- KPI METRICS -------- #
+# ---------------- KPI METRICS ---------------- #
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -78,7 +81,7 @@ col4.metric("Total Trades", len(df))
 
 st.divider()
 
-# -------- PRICE TREND -------- #
+# ---------------- PRICE TREND ---------------- #
 
 st.subheader("📈 Price Trend")
 
@@ -92,7 +95,7 @@ price_chart = px.line(
 
 st.plotly_chart(price_chart, use_container_width=True)
 
-# -------- VOLUME + DISTRIBUTION -------- #
+# ---------------- VOLUME + DISTRIBUTION ---------------- #
 
 col1, col2 = st.columns(2)
 
@@ -124,7 +127,7 @@ with col2:
 
 st.divider()
 
-# -------- FILTER -------- #
+# ---------------- FILTER ---------------- #
 
 st.subheader("🔍 Data Filter")
 
@@ -137,7 +140,7 @@ min_price, max_price = st.slider(
 
 filtered_df = df[(df.price >= min_price) & (df.price <= max_price)]
 
-# -------- DATA TABLE -------- #
+# ---------------- DATA TABLE ---------------- #
 
 st.subheader("📄 Streaming Data Table")
 
