@@ -11,13 +11,17 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
-data = yf.Ticker("AAPL").history(period="1mo")
+stocks = ["AAPL", "TSLA", "MSFT", "NVDA", "GOOGL"]
 
-for index, row in data.iterrows():
-    cur.execute(
-        "INSERT INTO stock_prices (symbol, price, volume, timestamp) VALUES (%s,%s,%s,%s)",
-        ("AAPL", float(row["Close"]), float(row["Volume"]), index)
-    )
+for symbol in stocks:
+
+    data = yf.Ticker(symbol).history(period="1mo")
+
+    for index, row in data.iterrows():
+        cur.execute(
+            "INSERT INTO stock_prices (symbol, price, volume, timestamp) VALUES (%s,%s,%s,%s)",
+            (symbol, float(row["Close"]), float(row["Volume"]), index)
+        )
 
 conn.commit()
 
