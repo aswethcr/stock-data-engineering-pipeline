@@ -7,7 +7,7 @@ import yfinance as yf
 
 st.set_page_config(page_title="Real-Time Stock Analytics", layout="wide")
 
-# Auto refresh every 5 seconds
+# auto refresh every 5 seconds
 st_autorefresh(interval=5000)
 
 st.title("📊 Real-Time Stock Data Engineering Dashboard")
@@ -32,18 +32,20 @@ except Exception:
     st.warning("Database not available. Running in demo mode.")
 
     # Download demo stock data
-    demo = yf.download("AAPL", period="1d", interval="1m")
-    demo.reset_index(inplace=True)
+    df = yf.download("AAPL", period="1d", interval="1m")
 
-    # Detect correct timestamp column
-    time_col = "Datetime" if "Datetime" in demo.columns else "Date"
+    # Fix dataframe structure
+    df = df.reset_index()
 
-    df = pd.DataFrame({
-        "timestamp": demo[time_col],
-        "price": demo["Close"],
-        "volume": demo["Volume"],
-        "symbol": ["AAPL"] * len(demo)
+    # Rename columns
+    df = df.rename(columns={
+        "Datetime": "timestamp",
+        "Date": "timestamp",
+        "Close": "price",
+        "Volume": "volume"
     })
+
+    df["symbol"] = "AAPL"
 
 # ---------------- PIPELINE METRICS ---------------- #
 
