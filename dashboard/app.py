@@ -34,10 +34,9 @@ except Exception:
     # Download demo stock data
     df = yf.download("AAPL", period="1d", interval="1m")
 
-    # Fix dataframe structure
     df = df.reset_index()
 
-    # Rename columns
+    # Rename columns safely
     df = df.rename(columns={
         "Datetime": "timestamp",
         "Date": "timestamp",
@@ -46,6 +45,13 @@ except Exception:
     })
 
     df["symbol"] = "AAPL"
+
+# ---------------- CLEAN DATA ---------------- #
+
+df["price"] = pd.to_numeric(df["price"], errors="coerce")
+df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
+
+df = df.dropna(subset=["price"])
 
 # ---------------- PIPELINE METRICS ---------------- #
 
@@ -74,9 +80,11 @@ st.divider()
 
 # ---------------- KPI METRICS ---------------- #
 
+current_price = df["price"].iloc[-1] if not df.empty else 0
+
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("Current Price", f"${df['price'].iloc[-1]:.2f}")
+col1.metric("Current Price", f"${current_price:.2f}")
 col2.metric("Average Price", f"${df['price'].mean():.2f}")
 col3.metric("Max Price", f"${df['price'].max():.2f}")
 col4.metric("Total Trades", len(df))
