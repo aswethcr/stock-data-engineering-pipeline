@@ -61,7 +61,7 @@ The processed data is stored in **PostgreSQL database** for further analysis.
 
 ### Clone the repository
 
-```bash
+bash
 git clone https://github.com/yourusername/stock-data-engineering-project.git
 cd stock-data-engineering-project
 Install dependencies
@@ -70,6 +70,7 @@ Start PostgreSQL using Docker
 docker-compose up -d
 Run the pipeline
 python main.py
+
 Features
 Automated stock data ETL pipeline
 
