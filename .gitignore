@@ -1,0 +1,10 @@
+__pycache__/
+*.log
+*.pyc
+.env
+venv/
+data_lake/raw/
+data_lake/processed/
+consumer.log
+producer.log
+.DS_Store
