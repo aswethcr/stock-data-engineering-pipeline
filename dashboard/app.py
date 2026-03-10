@@ -3,7 +3,6 @@ import psycopg2
 import pandas as pd
 import plotly.express as px
 from streamlit_autorefresh import st_autorefresh
-import yfinance as yf
 
 st.set_page_config(page_title="Real-Time Stock Analytics", layout="wide")
 
@@ -27,8 +26,7 @@ stock_symbol = stocks[company_name]
 
 # -------- DATABASE CONNECTION -------- #
 
-try:
-   conn = psycopg2.connect(
+conn = psycopg2.connect(
     host="aws-1-ap-northeast-2.pooler.supabase.com",
     database="postgres",
     user="postgres.liexaqlhycxrqbtwdgki",
@@ -36,41 +34,25 @@ try:
     port=5432
 )
 
-    query = f"SELECT * FROM stock_prices WHERE symbol='{stock_symbol}' ORDER BY timestamp"
-    df = pd.read_sql(query, conn)
+# -------- QUERY DATA -------- #
 
-    st.success("Connected to PostgreSQL database")
+query = f"""
+SELECT * 
+FROM stock_prices
+WHERE symbol = '{stock_symbol}'
+ORDER BY timestamp
+"""
 
-except Exception:
-
-    st.warning("Database not available. Running in demo mode.")
-
-    # Download stock data
-    df = yf.download(stock_symbol, period="1d", interval="1m")
-
-    # Flatten columns if multi-index
-    if isinstance(df.columns, pd.MultiIndex):
-        df.columns = df.columns.get_level_values(0)
-
-    df = df.reset_index()
-
-    time_col = "Datetime" if "Datetime" in df.columns else "Date"
-
-    df = df[[time_col, "Close", "Volume"]]
-
-    df.columns = ["timestamp", "price", "volume"]
-
-    df["symbol"] = stock_symbol
+df = pd.read_sql(query, conn)
 
 # -------- CLEAN DATA -------- #
 
 df["price"] = pd.to_numeric(df["price"], errors="coerce")
 df["volume"] = pd.to_numeric(df["volume"], errors="coerce")
-
-df = df.dropna(subset=["price"])
+df = df.dropna()
 
 if df.empty:
-    st.warning("No data available.")
+    st.warning("No data available in database.")
     st.stop()
 
 # -------- PIPELINE METRICS -------- #
@@ -83,14 +65,6 @@ col1.metric("Total Records", len(df))
 col2.metric("Max Price", f"${df['price'].max():.2f}")
 col3.metric("Min Price", f"${df['price'].min():.2f}")
 col4.metric("Average Price", f"${df['price'].mean():.2f}")
-
-# -------- RECORDS PER STOCK -------- #
-
-st.subheader("Records Per Stock")
-
-stock_counts = df["symbol"].value_counts()
-
-st.bar_chart(stock_counts)
 
 st.divider()
 
