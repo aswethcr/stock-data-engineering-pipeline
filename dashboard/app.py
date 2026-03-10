@@ -28,12 +28,13 @@ stock_symbol = stocks[company_name]
 # -------- DATABASE CONNECTION -------- #
 
 try:
-    conn = psycopg2.connect(
-        host="localhost",
-        database="stockdb",
-        user="aswethcr",
-        password="postgres"
-    )
+   conn = psycopg2.connect(
+    host="aws-1-ap-northeast-2.pooler.supabase.com",
+    database="postgres",
+    user="postgres.liexaqlhycxrqbtwdgki",
+    password="Asweth0810@rx",
+    port=5432
+)
 
     query = f"SELECT * FROM stock_prices WHERE symbol='{stock_symbol}' ORDER BY timestamp"
     df = pd.read_sql(query, conn)
