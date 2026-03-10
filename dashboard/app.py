@@ -14,10 +14,16 @@ st.title("📊 Real-Time Stock Data Engineering Dashboard")
 
 # -------- STOCK SELECTOR -------- #
 
-stock_symbol = st.selectbox(
-    "Select Stock",
-    ["AAPL", "TSLA", "MSFT", "NVDA", "GOOGL"]
-)
+stocks = {
+    "Apple": "AAPL",
+    "Tesla": "TSLA",
+    "Microsoft": "MSFT",
+    "Nvidia": "NVDA",
+    "Google": "GOOGL"
+}
+
+company_name = st.selectbox("Select Company", list(stocks.keys()))
+stock_symbol = stocks[company_name]
 
 # -------- DATABASE CONNECTION -------- #
 
@@ -38,7 +44,7 @@ except Exception:
 
     st.warning("Database not available. Running in demo mode.")
 
-    # Download demo data
+    # Download stock data
     df = yf.download(stock_symbol, period="1d", interval="1m")
 
     # Flatten columns if multi-index
@@ -77,7 +83,7 @@ col2.metric("Max Price", f"${df['price'].max():.2f}")
 col3.metric("Min Price", f"${df['price'].min():.2f}")
 col4.metric("Average Price", f"${df['price'].mean():.2f}")
 
-# -------- RECORD COUNT -------- #
+# -------- RECORDS PER STOCK -------- #
 
 st.subheader("Records Per Stock")
 
@@ -108,7 +114,7 @@ price_chart = px.line(
     df,
     x="timestamp",
     y="price",
-    title=f"{stock_symbol} Stock Price",
+    title=f"{company_name} Stock Price",
     markers=True
 )
 
