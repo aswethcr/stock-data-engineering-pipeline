@@ -3,30 +3,57 @@ import psycopg2
 import pandas as pd
 import plotly.express as px
 from streamlit_autorefresh import st_autorefresh
+import yfinance as yf
 
 st.set_page_config(page_title="Real-Time Stock Analytics", layout="wide")
 
-# auto refresh every 5 seconds
+# Auto refresh every 5 seconds
 st_autorefresh(interval=5000)
 
-# Database connection
-conn = psycopg2.connect(
-    host="localhost",
-    database="stockdb",
-    user="aswethcr",
-    password="postgres"
-)
+st.title("📊 Real-Time Stock Data Engineering Dashboard")
 
-query = "SELECT * FROM stock_prices ORDER BY timestamp"
-df = pd.read_sql(query, conn)
+# -------- DATABASE CONNECTION -------- #
+
+try:
+    conn = psycopg2.connect(
+        host="localhost",
+        database="stockdb",
+        user="aswethcr",
+        password="postgres"
+    )
+
+    query = "SELECT * FROM stock_prices ORDER BY timestamp"
+    df = pd.read_sql(query, conn)
+
+    st.success("Connected to PostgreSQL database")
+
+except Exception:
+
+    st.warning("Database not available. Running in demo mode.")
+
+    # Demo stock data for Streamlit Cloud
+    demo = yf.download("AAPL", period="1d", interval="1m")
+    demo.reset_index(inplace=True)
+
+    df = pd.DataFrame({
+        "timestamp": demo["Datetime"],
+        "price": demo["Close"],
+        "volume": demo["Volume"],
+        "symbol": "AAPL"
+    })
+
+# -------- PIPELINE METRICS -------- #
+
 st.subheader("Pipeline Metrics")
 
 col1, col2, col3, col4 = st.columns(4)
 
 col1.metric("Total Records", len(df))
-col2.metric("Max Price", df["price"].max())
-col3.metric("Min Price", df["price"].min())
+col2.metric("Max Price", round(df["price"].max(), 2))
+col3.metric("Min Price", round(df["price"].min(), 2))
 col4.metric("Average Price", round(df["price"].mean(), 2))
+
+# -------- RECORDS PER STOCK -------- #
 
 st.subheader("Records Per Stock")
 
@@ -38,7 +65,7 @@ if df.empty:
     st.warning("No data available yet.")
     st.stop()
 
-st.title("📊 Real-Time Stock Data Engineering Dashboard")
+st.divider()
 
 # -------- KPI METRICS -------- #
 
@@ -70,6 +97,7 @@ st.plotly_chart(price_chart, use_container_width=True)
 col1, col2 = st.columns(2)
 
 with col1:
+
     st.subheader("📊 Trading Volume")
 
     volume_chart = px.bar(
@@ -82,6 +110,7 @@ with col1:
     st.plotly_chart(volume_chart, use_container_width=True)
 
 with col2:
+
     st.subheader("📉 Price Distribution")
 
     hist = px.histogram(
@@ -108,7 +137,7 @@ min_price, max_price = st.slider(
 
 filtered_df = df[(df.price >= min_price) & (df.price <= max_price)]
 
-# -------- TABLE -------- #
+# -------- DATA TABLE -------- #
 
 st.subheader("📄 Streaming Data Table")
 
