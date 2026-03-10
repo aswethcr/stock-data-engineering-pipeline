@@ -7,7 +7,7 @@ import yfinance as yf
 
 st.set_page_config(page_title="Real-Time Stock Analytics", layout="wide")
 
-# auto refresh every 5 seconds
+# Auto refresh every 5 seconds
 st_autorefresh(interval=5000)
 
 st.title("📊 Real-Time Stock Data Engineering Dashboard")
@@ -31,18 +31,19 @@ except Exception:
 
     st.warning("Database not available. Running in demo mode.")
 
-    # Download demo stock data
+    # Download demo data
     df = yf.download("AAPL", period="1d", interval="1m")
+
+    # Flatten multi-index columns if present
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
 
     df = df.reset_index()
 
-    # Rename columns safely
-    df = df.rename(columns={
-        "Datetime": "timestamp",
-        "Date": "timestamp",
-        "Close": "price",
-        "Volume": "volume"
-    })
+    # Build clean dataframe
+    df = df[["Datetime" if "Datetime" in df.columns else "Date", "Close", "Volume"]]
+
+    df.columns = ["timestamp", "price", "volume"]
 
     df["symbol"] = "AAPL"
 
@@ -80,7 +81,7 @@ st.divider()
 
 # ---------------- KPI METRICS ---------------- #
 
-current_price = df["price"].iloc[-1] if not df.empty else 0
+current_price = float(df["price"].iloc[-1])
 
 col1, col2, col3, col4 = st.columns(4)
 
