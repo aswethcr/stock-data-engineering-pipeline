@@ -27,11 +27,11 @@ stock_symbol = stocks[company_name]
 # -------- DATABASE CONNECTION -------- #
 
 conn = psycopg2.connect(
-    host="aws-1-ap-northeast-2.pooler.supabase.com",
-    database="postgres",
-    user="your_user",
-    password="your_password",
-    port=5432,
+    host=st.secrets["postgres"]["host"],
+    database=st.secrets["postgres"]["database"],
+    user=st.secrets["postgres"]["user"],
+    password=st.secrets["postgres"]["password"],
+    port=st.secrets["postgres"]["port"],
     sslmode="require"
 )
 
